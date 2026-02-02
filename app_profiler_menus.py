@@ -156,3 +156,4 @@ elif menu == "Contact":
                 st.success("Message submitted successfully! (Note: This is a demo - no actual email is sent)")
             else:
                 st.warning("Please fill in all fields")
+
