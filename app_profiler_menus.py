@@ -48,9 +48,9 @@ if menu == "Researcher Profile":
     st.write(f"**Institution:** {institution}")
     
     st.image(
-    "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg",
-    caption="Nature (Pixabay)"
-)
+        "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg",
+        caption="Nature (Pixabay)"
+    )
 
 elif menu == "Publications":
     st.title("Publications")
@@ -58,28 +58,35 @@ elif menu == "Publications":
 
     # Upload publications file
     uploaded_file = st.file_uploader("Upload a CSV of Publications", type="csv")
-    if uploaded_file:
-        publications = pd.read_csv(uploaded_file)
-        st.dataframe(publications)
+    if uploaded_file is not None:
+        try:
+            publications = pd.read_csv(uploaded_file)
+            st.dataframe(publications)
 
-        # Add filtering for year or keyword
-        keyword = st.text_input("Filter by keyword", "")
-        if keyword:
-            filtered = publications[
-                publications.apply(lambda row: keyword.lower() in row.astype(str).str.lower().values, axis=1)
-            ]
-            st.write(f"Filtered Results for '{keyword}':")
-            st.dataframe(filtered)
-        else:
-            st.write("Showing all publications")
+            # Add filtering for year or keyword
+            keyword = st.text_input("Filter by keyword", "")
+            if keyword:
+                # Safely filter with string conversion
+                mask = publications.apply(
+                    lambda row: keyword.lower() in row.astype(str).str.lower().values, 
+                    axis=1
+                )
+                filtered = publications[mask]
+                st.write(f"Filtered Results for '{keyword}':")
+                st.dataframe(filtered)
+            else:
+                st.write("Showing all publications")
 
-        # Publication trends
-        if "Year" in publications.columns:
-            st.subheader("Publication Trends")
-            year_counts = publications["Year"].value_counts().sort_index()
-            st.bar_chart(year_counts)
-        else:
-            st.write("The CSV does not have a 'Year' column to visualize trends.")
+            # Publication trends
+            if "Year" in publications.columns:
+                st.subheader("Publication Trends")
+                year_counts = publications["Year"].value_counts().sort_index()
+                st.bar_chart(year_counts)
+            else:
+                st.warning("The CSV does not have a 'Year' column to visualize trends.")
+                
+        except Exception as e:
+            st.error(f"Error reading file: {e}")
 
 elif menu == "STEM Data Explorer":
     st.title("STEM Data Explorer")
@@ -117,19 +124,35 @@ elif menu == "STEM Data Explorer":
         st.write("### Weather Data")
         st.dataframe(weather_data)
         # Add widgets to filter by temperature and humidity
-        temp_filter = st.slider("Filter by Temperature (°C)", -10.0, 40.0, (-10.0, 40.0))
-        humidity_filter = st.slider("Filter by Humidity (%)", 0, 100, (0, 100))
+        col1, col2 = st.columns(2)
+        with col1:
+            temp_filter = st.slider("Filter by Temperature (°C)", -10.0, 40.0, (-10.0, 40.0))
+        with col2:
+            humidity_filter = st.slider("Filter by Humidity (%)", 0, 100, (0, 100))
+        
         filtered_weather = weather_data[
             weather_data["Temperature (°C)"].between(temp_filter[0], temp_filter[1]) &
             weather_data["Humidity (%)"].between(humidity_filter[0], humidity_filter[1])
         ]
         st.write(f"Filtered Results for Temperature {temp_filter} and Humidity {humidity_filter}:")
         st.dataframe(filtered_weather)
-        
-        
 
 elif menu == "Contact":
-    # Add a contact section
-    st.header("Contact Information")
+    st.title("Contact Information")
+    st.header("Get in Touch")
     email = "jane.doe@example.com"
-    st.write(f"You can reach me at {email}.")
+    st.write(f"**Email:** {email}")
+    st.write("**Office Hours:** Monday-Friday, 9 AM - 5 PM")
+    
+    # Optional contact form
+    with st.form("contact_form"):
+        st.subheader("Send a Message")
+        visitor_name = st.text_input("Your Name")
+        visitor_email = st.text_input("Your Email")
+        message = st.text_area("Message")
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+            if visitor_name and visitor_email and message:
+                st.success("Message submitted successfully! (Note: This is a demo - no actual email is sent)")
+            else:
+                st.warning("Please fill in all fields")
